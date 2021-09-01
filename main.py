@@ -4,7 +4,10 @@ from os import environ
 from time import sleep
 import json
 
-from db import connect
+from db import (connect, create_table, insert,
+                insert_many, update, delete,
+                get,
+                )
 
 
 load_dotenv()
@@ -28,5 +31,9 @@ def main():
 
 if __name__ == '__main__':
     # main()
-    connect()
-    sleep(10)
+    # connect()
+    insert(('идти', 'go'), 'words')
+    insert_many([
+        ('стоять', 'stand'),
+        ('класть', 'put')
+    ], 'words')
