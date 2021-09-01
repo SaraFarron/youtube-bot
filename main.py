@@ -1,7 +1,10 @@
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 from os import environ
+from time import sleep
 import json
+
+from db import connect
 
 
 load_dotenv()
@@ -24,4 +27,6 @@ def main():
         print('done')
 
 if __name__ == '__main__':
-    main()
+    # main()
+    connect()
+    sleep(10)
