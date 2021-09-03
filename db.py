@@ -25,7 +25,7 @@ def create_table(name: str):
         f"""
         CREATE TABLE {name} (
         id SERIAL PRIMARY KEY,
-        link TEXT,
+        channel TEXT,
         pattern TEXT
         );"""
     )
@@ -46,10 +46,10 @@ def create_table(name: str):
 
 
 
-def insert(link: str, pattern: str, table: str): # TODO doesnt work
+def insert(channel: str, pattern: str, table: str): # TODO doesnt work
     """ Insert a new value into the table"""
 
-    command = f"INSERT INTO {table} (link, pattern) VALUES {(link, pattern)} RETURNING id;"
+    command = f"INSERT INTO {table} (channel, pattern) VALUES {(channel, pattern)} RETURNING id;"
 
     try:
         with psycopg2.connect(db) as conn:

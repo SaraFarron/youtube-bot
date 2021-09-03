@@ -17,5 +17,6 @@ def main():
         json.dump(response, f, ensure_ascii=False, indent=4)
         print('done')
 
+
 if __name__ == '__main__':
     main()

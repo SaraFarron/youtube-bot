@@ -1,10 +1,6 @@
 from googleapiclient.discovery import build
 from os import environ
 
-# from db import (connect, create_table, insert,
-#                 update, delete, get,
-#                 )
-
 api_key = environ.get('GOOGLE_API')
 environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 
