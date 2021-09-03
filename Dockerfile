@@ -8,7 +8,8 @@ RUN pip install -r requirements.txt
 
 COPY .env .
 COPY myyoutubeproject-292113-fcf735dc69cf.json .
-COPY db.py .
 COPY main.py .
+COPY db.py .
+COPY api_requests.py .
 
 ENTRYPOINT ["python", "main.py"]

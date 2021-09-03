@@ -1,17 +1,15 @@
 from googleapiclient.discovery import build
-from dotenv import load_dotenv
 from os import environ
 
-from main import logger
-from db import (connect, create_table, insert,
-                update, delete, get,
-                )
+# from db import (connect, create_table, insert,
+#                 update, delete, get,
+#                 )
 
-api_key = environ.get('GOOGL_API')
+api_key = environ.get('GOOGLE_API')
 environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 
 
-def get_videos(response: dict):
+def pull_videos(response: dict):
     """Pulls videos out of response and returns dictionary of them"""
 
     items = response['items']
@@ -29,7 +27,7 @@ def get_videos(response: dict):
     return videos
 
 
-def get_last_videos(channel: str, number=100):
+def get_last_videos(channel: str, number=10):
     """Returns dict of last number of videos. If number is not provided returns 100"""
 
     youtube = build('youtube', 'v3', developerKey=api_key)
@@ -41,18 +39,18 @@ def get_last_videos(channel: str, number=100):
     )
     response = request.execute()
     next_page_token = response['nextPageToken']
-    videos = get_videos(response)
+    videos = pull_videos(response)
 
-    while len(videos) <= number:
+    while len(videos) < number:
         request = youtube.search().list(
             part='snippet',
             channelId=channel,
             order='date',
-            PageToken=next_page_token
+            pageToken=next_page_token
         )
         response = request.execute()
         next_page_token = response['nextPageToken']
-        videos += get_videos(response)
+        videos = videos | pull_videos(response)
 
     return videos
 
