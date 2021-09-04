@@ -3,7 +3,7 @@ version: "3.7"
 services:
   youtube-bot:
     build: .
-    entrypoint: python main.py
+    entrypoint: python bot.py
     volumes:
     - .:/usr/src/server/
     env_file:

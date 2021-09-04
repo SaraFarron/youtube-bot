@@ -1,6 +1,7 @@
 import psycopg2
 from main import logger
 
+
 db = 'host=db dbname=postgres user=postgres password=postgres'
 
 
@@ -42,8 +43,6 @@ def create_table(name: str):
     finally:
         if conn is not None:
             conn.close()
-
-
 
 
 def insert(channel: str, pattern: str, table: str): # TODO doesnt work

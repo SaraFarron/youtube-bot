@@ -13,4 +13,4 @@ COPY db.py .
 COPY api_requests.py .
 COPY bot.py .
 
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python", "bot.py"]

@@ -21,9 +21,9 @@ class NewChannel(StatesGroup):
     get_pattern = State()
 
 
-@dp.message_handler(text_contains='https://www.youtube.com/channel/', state=NewChannel.get_channel_id)
+@dp.message_handler(Text(contains='youtube.com/channel/'))
 async def add_channel(message: Message, state: FSMContext):
-    channel_id = message.text.split('https://www.youtube.com/channel/')[1]
+    channel_id = message.text.split('/channel/')[1]
     await message.answer('Send me the pattern now')
     await NewChannel.next()
 
@@ -34,3 +34,12 @@ async def add_pattern(message: Message, state: FSMContext):
     # insert()
     await message.answer(
         'Done! You will get a message when video with title corresponding your pattern will be uploaded')
+
+
+@dp.message_handler()
+async def echo(message: Message):
+    await message.answer(message.text)
+
+
+if __name__ == '__main__':
+    executor.start_polling(dp)

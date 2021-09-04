@@ -4,6 +4,7 @@ import json
 
 from api_requests import get_last_videos
 
+
 basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=INFO)
 logger = getLogger(__name__)
