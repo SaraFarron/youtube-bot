@@ -45,10 +45,13 @@ def create_table(name: str):
             conn.close()
 
 
-def insert(channel: str, pattern: str, table: str): # TODO doesnt work
+def insert(channel: str, pattern: str, table: str):
     """ Insert a new value into the table"""
 
     command = f"INSERT INTO {table} (channel, pattern) VALUES {(channel, pattern)} RETURNING id;"
+
+    if not is_table(table):
+        create_table(table)
 
     try:
         with psycopg2.connect(db) as conn:
@@ -70,5 +73,36 @@ def delete(values):
     pass
 
 
-def get(values):
-    pass
+def get(table):
+    """Return a string with all user's subs"""
+
+    if not is_table(table):
+        return "You don't have any subscriptions yet"
+
+    command = f"SELECT * FROM {table}"
+
+    with psycopg2.connect(db) as conn:
+        with conn.cursor() as cur:
+            cur.execute()
+            list_of_subs = cur.fetchone()
+
+    result = str(
+        [f'{channel} - {pattern}\n' for channel, pattern in list_of_subs]
+    )
+    return list_of_subs
+
+
+def is_table(name):
+    """Check if table exists"""
+
+    with psycopg2.connect(db) as conn:
+        with conn.cursor() as cur:
+            try:  # TODO doesn't work
+                cur.execute(f'SELECT * FROM information_schema.tables WHERE table_name={name};')
+
+                if bool(cur.rowcount):
+                    return True
+                return False
+
+            except psycopg2.DatabaseError:
+                return False
