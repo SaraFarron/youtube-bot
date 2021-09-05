@@ -50,7 +50,7 @@ def insert(channel: str, pattern: str, table: str):
 
     command = f"INSERT INTO {table} (channel, pattern) VALUES {(channel, pattern)} RETURNING id;"
 
-    if not is_table(table):
+    if not is_table(table):  # Throws error
         create_table(table)
 
     try:
@@ -98,10 +98,12 @@ def is_table(name):
     with psycopg2.connect(db) as conn:
         with conn.cursor() as cur:
             try:  # TODO doesn't work
-                cur.execute(f'SELECT * FROM information_schema.tables WHERE table_name={name};')
+                cur.execute(f"SELECT * FROM information_schema.tables WHERE table_schema = 'public';")
 
-                if bool(cur.rowcount):
+                if name.lower() in cur.fetchone():
                     return True
+                logger.info(cur.fetchone())
+                logger.info(name.lower())
                 return False
 
             except psycopg2.DatabaseError:

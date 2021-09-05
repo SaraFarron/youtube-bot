@@ -4,6 +4,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text, Command
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
 from os import environ
 import asyncio
 
@@ -16,6 +17,12 @@ from main import logger
 loop = asyncio.get_event_loop()
 bot = Bot(environ.get('BOT_TOKEN'), parse_mode='HTML')
 dp = Dispatcher(bot, loop=loop, storage=MemoryStorage())
+
+
+def create_keyboard(subs):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    for sub in subs:
+        button = InlineKeyboardButton(f'')
 
 
 class NewChannel(StatesGroup):
@@ -52,6 +59,13 @@ async def add_pattern(message: Message, state: FSMContext):
     await message.answer(
         'Done! You will get a message when video with title corresponding your pattern will be uploaded')
     await state.finish()
+
+
+@dp.message_handler(Command('UpdateSubscription'))
+async def update_subscription(message: Message, state: FSMContext):
+    subs = get(message.from_user.username)
+
+    await message.answer(subs)
 
 
 @dp.message_handler(Command('ShowAllSubscriptions'))
