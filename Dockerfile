@@ -12,5 +12,4 @@ COPY main.py .
 COPY db.py .
 COPY api_requests.py .
 COPY bot.py .
-
-ENTRYPOINT ["python", "bot.py"]
+COPY celery .

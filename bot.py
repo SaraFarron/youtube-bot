@@ -70,7 +70,7 @@ async def update_subscription(message: Message, state: FSMContext):
 
 @dp.message_handler(Command('ShowAllSubscriptions'))
 async def show_subscriptions(message: Message):
-    subs = get(table=message.from_user.username)
+    subs = get(message.from_user.username)
     await message.answer(subs)
 
 
