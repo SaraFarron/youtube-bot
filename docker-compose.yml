@@ -20,19 +20,5 @@ services:
       - POSTGRES_DB=postgres
     ports:
     - 5432:5432
-  celery:
-    build: .
-    command: celery -A celery worker -l info
-    volumes:
-      - .:/usr/src/server/
-    env_file:
-      - .env
-    depends_on:
-      - redis
-      - db
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
 volumes:
   postgres_data:

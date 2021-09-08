@@ -25,7 +25,7 @@ def pull_videos(response: dict):
 
 
 def get_last_videos(channel: str, number=10):
-    """Returns dict of last number of videos. If number is not provided returns 100"""
+    """Returns dict of last number of videos. If number is not provided returns 10"""
 
     youtube = build('youtube', 'v3', developerKey=api_key)
 

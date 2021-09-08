@@ -12,4 +12,3 @@ COPY main.py .
 COPY db.py .
 COPY api_requests.py .
 COPY bot.py .
-COPY celery .
