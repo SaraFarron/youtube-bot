@@ -18,6 +18,7 @@ def pull_videos(response: dict):
         videos[video_id] = {
             'title': snippet['title'],
             'channel id': snippet['channelId'],
+            'channel title': snippet['channelTitle'],
             'publication date': snippet['publishedAt'],
         }
 

@@ -10,7 +10,7 @@ import asyncio
 
 from db import (insert, update, delete,
                 get,)
-from main import logger
+from main import logger, get_last_videos
 
 
 loop = asyncio.get_event_loop()
@@ -71,6 +71,12 @@ async def update_subscription(message: Message, state: FSMContext):
 async def show_subscriptions(message: Message):
     subs = get(message.from_user.username)
     await message.answer(subs)
+
+
+@dp.message_handler(Command('CallMain'))
+async def main(message: Message):
+    logger.info(get_last_videos('UCyzelLPcSrGUdLhN79eA4mg'))
+    await message.answer('done')
 
 
 @dp.message_handler()

@@ -26,7 +26,8 @@ def create_table(name: str):
         f"""
         CREATE TABLE "{name}" (
         id SERIAL PRIMARY KEY,
-        channel TEXT,
+        channel_name TEXT,
+        channel_id TEXT,
         pattern TEXT
         );"""
     )
@@ -49,7 +50,7 @@ def insert(channel: str, pattern: str, table: str):
     """ Insert a new value into the table"""
 
     command = f"""
-    INSERT INTO "{table}" (channel, pattern) 
+    INSERT INTO "{table}" (channel, pattern)
     VALUES {(channel, pattern)} 
     RETURNING id
     ;"""
@@ -70,12 +71,42 @@ def insert(channel: str, pattern: str, table: str):
         logger.error(error)
 
 
-def update(values):
-    pass
+def update(values: dict[str: str], table: str):
+    """Change value in db"""
+
+    if not is_table(table):
+        return "You don't have any subscriptions yet"
+
+    command = f"""UPDATE "{table}"
+                SET {values.keys()[0]} = {values.values()[0]}
+                ;"""
+
+    with psycopg2.connect(db) as conn:
+        with conn.cursor() as cur:
+            cur.execute(command)
+
+    return 'Updated'
 
 
-def delete(values):
-    pass
+def delete(values: dict[str: str], table: str):
+    """Delete value from db"""
+
+    if not is_table(table):
+        return "You don't have any subscriptions yet"
+
+    command = f"""DELETE FROM "{table}"
+                WHERE channel = {values.keys()[0]}
+                AND pattern = {values.values()[0]}
+                ;"""
+
+    try:
+        with psycopg2.connect(db) as conn:
+            with conn.cursor() as cur:
+                cur.execute(command)
+    except psycopg2.DatabaseError as error:
+        return error
+
+    return 'Deleted'
 
 
 def get(table: str):
@@ -89,14 +120,16 @@ def get(table: str):
     with psycopg2.connect(db) as conn:
         with conn.cursor() as cur:
             cur.execute(command)
-            list_of_subs = cur.fetchone()
+            list_of_subs = cur.fetchall()
 
     if not list_of_subs:
         return 'Your list of subs is empty'
-    result = str(
-        [f'{channel} - {pattern}\n' for channel, pattern in list_of_subs]
-    )
-    return list_of_subs
+
+    result = ''
+    for row in list_of_subs:
+        result += f'{row[1]} - {row[2]}\n'
+
+    return result
 
 
 def is_table(name: str):
