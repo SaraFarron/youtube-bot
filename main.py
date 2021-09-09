@@ -11,10 +11,10 @@ load_dotenv()
 
 
 def main():
-    channels = ['']  # TODO get all channels from db
-
-    for channel in channels:
-        schedule.every.day.at('1:00').do(get_last_videos(get_last_videos(channel, 5)))
+    # channels = ['']  # TODO get all channels from db
+    #
+    # for channel in channels:
+    #     schedule.every.day.at('1:00').do(get_last_videos(get_last_videos(channel, 5)))
 
     # while True:
     #     schedule.run_pending()

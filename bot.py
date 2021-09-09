@@ -8,9 +8,8 @@ from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardBu
 from os import environ
 import asyncio
 
-from db import (create_table, insert,
-                update, delete, get,
-                )
+from db import (insert, update, delete,
+                get,)
 from main import logger
 
 
@@ -21,7 +20,7 @@ dp = Dispatcher(bot, loop=loop, storage=MemoryStorage())
 
 def create_keyboard(subs):
     keyboard = InlineKeyboardMarkup(row_width=1)
-    for sub in subs:
+    for sub in subs:  # TODO
         button = InlineKeyboardButton(f'')
 
 
