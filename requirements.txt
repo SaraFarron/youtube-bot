@@ -3,4 +3,4 @@ google-api-python-client
 python-dotenv
 psycopg2-binary
 aiogram
-schedule
+dramatiq[rabbitmq, watch]
