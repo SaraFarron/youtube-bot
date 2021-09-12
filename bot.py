@@ -73,7 +73,7 @@ async def show_subscriptions(message: Message):
     await message.answer(subs)
 
 
-@dp.message_handler(Command('CallMain'))
+@dp.message_handler(Command('CallMain'))  # TODO For dev purposes, delete after
 async def main(message: Message):
     logger.info(get_last_videos('UCyzelLPcSrGUdLhN79eA4mg'))
     await message.answer('done')
@@ -84,5 +84,48 @@ async def echo(message: Message):
     await message.answer(message.text)
 
 
+async def send_notification(link: str, user: str):
+    await bot.send_message(chat_id=user, text=link)
+
+
+async def background_on_start():
+    """Background task which is created when bot starts"""
+
+    while True:
+        await asyncio.sleep(86400)  # Every day
+        channels = get('')
+        for channel in channels:
+            videos = get_last_videos(channel, number=5)
+            videos_in_db = get(channel)
+
+            for video in videos:  # TODO
+                if video not in videos_in_db:
+                    asyncio.create_task(send_notification())
+
+
+# --------- In case this will be needed ---------
+async def background_on_action():
+    """Background task which is created when user asked"""
+
+    while True:
+        logger.info('Background task in progress')
+        await asyncio.sleep(10)
+
+
+@dp.message_handler(Command('start'))
+async def background_task_creator(message: Message):
+    """Creates background tasks"""
+
+    asyncio.create_task(background_on_action())
+    await message.reply("Background task create")
+# --------- In case this will be needed ---------
+
+
+async def on_bot_start_up(dispatcher: Dispatcher):
+    """List of actions which should be done before bot start"""
+
+    asyncio.create_task(background_on_start())  # creates background task
+
+
 if __name__ == '__main__':
-    executor.start_polling(dp)
+    executor.start_polling(dp, on_startup=on_bot_start_up)
