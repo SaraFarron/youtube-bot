@@ -3,4 +3,3 @@ google-api-python-client
 python-dotenv
 psycopg2-binary
 aiogram
-dramatiq[rabbitmq, watch]

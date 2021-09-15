@@ -1,6 +1,6 @@
 from logging import basicConfig, getLogger, INFO
 from dotenv import load_dotenv
-import time, json
+import json
 from api_requests import get_last_videos
 
 

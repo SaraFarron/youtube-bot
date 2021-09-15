@@ -1,14 +1,6 @@
 version: "3.7"
 
 services:
-  dramatiq:
-    build: .
-    entrypoint: dramatiq background_tasks
-    volumes:
-    - .:/usr/src/server/
-    depends_on:
-      - db
-      - youtube-bot
   youtube-bot:
     build: .
     entrypoint: python bot.py

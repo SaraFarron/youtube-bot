@@ -8,8 +8,7 @@ from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardBu
 from os import environ
 import asyncio
 
-from db import (insert, update, delete,
-                get,)
+from new_db import *
 from main import logger, get_last_videos
 
 
@@ -41,40 +40,58 @@ class DeleteChannel(StatesGroup):
 
 @dp.message_handler(Text(contains='youtube.com/channel/'))
 async def add_channel(message: Message, state: FSMContext):
+
     logger.info(f'user {message.from_user.username} sent link')
     channel_id = message.text.split('/channel/')[1]
+
     async with state.proxy() as data:
-        data['channel'] = channel_id
+        data['channel_id'] = channel_id
+
     await message.answer('Send me the pattern now')
     await NewChannel.get_pattern.set()
 
 
 @dp.message_handler(state=NewChannel.get_pattern)
 async def add_pattern(message: Message, state: FSMContext):
+
     logger.info(f'{message.from_user.username} is adding pattern')
     pattern = message.text
+
     async with state.proxy() as data:
-        insert(channel=data['channel'], pattern=pattern, table=message.from_user.username)
-    await message.answer(
-        'Done! You will get a message when video with title corresponding your pattern will be uploaded')
+        channel_data = get_last_videos(data['channel_id'])
+        logger.info(channel_data)
+
+    channel_id, channel_name = channel_data['channel_id'], channel_data['channel_title']
+    videos = [video for video in channel_data['videos']]
+    response = new_user_subscription(channel_id, channel_name, pattern, message.from_user.username)
+
+    if not response:
+        add_channel_to_db(channel_id, videos)
+        await message.answer(
+            "Done! You will get a message when video with title you're interested will be uploaded")
+    else:
+        await message.answer('Something went wrong')
+
     await state.finish()
 
 
 @dp.message_handler(Command('UpdateSubscription'))
 async def update_subscription(message: Message, state: FSMContext):
-    subs = get(message.from_user.username)
 
+    subs = get_value(message.from_user.username)
     await message.answer(subs)
 
 
 @dp.message_handler(Command('ShowAllSubscriptions'))
 async def show_subscriptions(message: Message):
-    subs = get(message.from_user.username)
+
+    subs = get_value(message.from_user.username)
     await message.answer(subs)
 
 
 @dp.message_handler(Command('CallMain'))  # TODO For dev purposes, delete after
 async def main(message: Message):
+
     logger.info(get_last_videos('UCyzelLPcSrGUdLhN79eA4mg'))
     await message.answer('done')
 
@@ -93,13 +110,13 @@ async def background_on_start():
 
     while True:
         await asyncio.sleep(86400)  # Every day
-        channels = get('')
+        channels = get_value('')
         for channel in channels:
             videos = get_last_videos(channel, number=5)
-            videos_in_db = get(channel)
+            videos_in_db = get_value(channel)
 
-            for video in videos:  # TODO
-                if video not in videos_in_db:
+            for video in videos['videos']:  # TODO
+                if video not in get_value('channels', 'channel_id'):
                     asyncio.create_task(send_notification())
 
 

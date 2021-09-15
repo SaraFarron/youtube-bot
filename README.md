@@ -14,6 +14,11 @@ this commands take sql output
 8. Add comments and docs
 9. Find host
 
+### db format
+
+1. Users' tables: name - username, fields: id, channel_name, channel_id, pattern
+2. Table 'channels': fields: channel_id, video_0, video_1, video_2, video_3, video_4
+
 youtube api allows 100 search requests per day
 
 [link to youtube api docs](https://developers.google.com/youtube/v3/docs/search/list)

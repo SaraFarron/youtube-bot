@@ -10,16 +10,18 @@ def pull_videos(response: dict):
     """Pulls videos out of response and returns dictionary of them"""
 
     items = response['items']
-    videos = {}
+    videos = {
+        'channel_id': items[0]['snippet']['channelId'],
+        'channel_title': items[0]['snippet']['channelTitle'],
+        'videos': {}
+    }
 
     for item in items:
         snippet = item['snippet']
         video_id = item['id']['videoId']
-        videos[video_id] = {
+        videos['videos'][video_id] = {
             'title': snippet['title'],
-            'channel id': snippet['channelId'],
-            'channel title': snippet['channelTitle'],
-            'publication date': snippet['publishedAt'],
+            'publication_date': snippet['publishedAt'],
         }
 
     return videos
@@ -47,8 +49,11 @@ def get_last_videos(channel: str, number=10):
             pageToken=next_page_token
         )
         response = request.execute()
-        next_page_token = response['nextPageToken']
-        videos = videos | pull_videos(response)
+        try:  # Perhaps error occurs when channel doesn't have more than 5 videos
+            next_page_token = response['nextPageToken']
+        except KeyError:
+            return videos
+        videos['videos'] = videos['videos'] | pull_videos(response)['videos']
 
     return videos
 
