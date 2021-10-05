@@ -46,6 +46,7 @@ def get_last_videos(channel: str, number=10):
             part='snippet',
             channelId=channel,
             order='date',
+            type='video',
             pageToken=next_page_token
         )
         response = request.execute()

@@ -1,5 +1,4 @@
 requests
 google-api-python-client
-python-dotenv
 psycopg2-binary
 aiogram

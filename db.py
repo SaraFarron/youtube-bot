@@ -1,149 +1,129 @@
-import psycopg2
+from psycopg2 import connect, DatabaseError
 from main import logger
 
 
-db = 'host=db dbname=postgres user=postgres password=postgres'
+def execute_sql(command: str):
+    """ Execute sql command and returns result"""
 
-
-def connect():
-    """Connect to database"""
+    db = 'host=db dbname=postgres user=postgres password=postgres'
+    conn = None
 
     try:
-        with psycopg2.connect(db) as conn:
+        with connect(db) as conn:
             with conn.cursor() as cur:
-                cur.execute('SELECT version();')
-                db_version = cur.fetchone()
-                logger.info(db_version)
+                cur.execute(command)
+                try:
+                    logger.info(f'SQL execute: {command}')
+                    response = cur.fetchall()
+                except DatabaseError:
+                    return ''
 
-    except psycopg2.DatabaseError as error:
+    except DatabaseError as error:
         logger.error(error)
+        return 'Error'
+
+    if conn is not None:
+        conn.close()
+    return response
 
 
-def create_table(name: str):
-    """Create table with given name"""
+def new_user_table(name: str):
+    """Create new user's table"""
 
-    command = (
-        f"""
-        CREATE TABLE "{name}" (
+    command = f"""
+    CREATE TABLE "{name}" (
         id SERIAL PRIMARY KEY,
         channel_name TEXT,
         channel_id TEXT,
         pattern TEXT
         );"""
-    )
-    conn = None
 
-    try:
-        with psycopg2.connect(db) as conn:
-            with conn.cursor() as cur:
-                cur.execute(command)
+    response = execute_sql(command)
 
-    except (Exception, psycopg2.DatabaseError) as error:
-        logger.error(error)
-
-    finally:
-        if conn is not None:
-            conn.close()
+    if is_table(name):
+        return "You are already registered"
+    return response
 
 
-def insert(channel: str, pattern: str, table: str):
-    """ Insert a new value into the table"""
+def new_user_subscription(channel_id: str, channel_name: str, pattern: str, user: str):
+    """Add new sub"""
+
+    if not is_table(user):
+        new_user_table(user)
 
     command = f"""
-    INSERT INTO "{table}" (channel, pattern)
-    VALUES {(channel, pattern)} 
-    RETURNING id
-    ;"""
+        INSERT INTO "{user}" (channel_id, channel_name, pattern)
+        VALUES {(channel_id, channel_name, pattern)}
+        ;"""
 
-    if not is_table(table):  # Throws error
-        logger.info('no table')
-        create_table(table)
+    response = execute_sql(command)
 
-    try:
-        with psycopg2.connect(db) as conn:
-            with conn.cursor() as cur:
-                cur.execute(command)
-                word_id = cur.fetchone()[0]
-                logger.info(word_id)
-        conn.close()
-
-    except (Exception, psycopg2.DatabaseError) as error:
-        logger.error(error)
+    if response:
+        return True
+    return False
 
 
-def update(values: dict[str: str], table: str):
-    """Change value in db"""
+def add_channel_to_db(channel_id: str, videos: list[str, ]):
+    """Add channel to db"""
 
-    if not is_table(table):
-        return "You don't have any subscriptions yet"
+    if not is_table('channels'):  # Temporarily, should be done on start
+        execute_sql(
+            f"""
+            CREATE TABLE "channels" (
+            id SERIAL PRIMARY KEY,
+            channel_id TEXT,
+            video_0 TEXT,
+            video_1 TEXT,
+            video_2 TEXT,
+            video_3 TEXT,
+            video_4 TEXT
+            );"""
+        )
+
+    command = f"""
+            INSERT INTO "channels" (channel_id, video_0, video_1, video_2, video_3, video_4)
+            VALUES {(channel_id, videos[0], videos[1], videos[2], videos[3], videos[4])}
+            ;"""
+
+    return execute_sql(command)
+
+
+def update_row(table: str, old_value: str, new_value: str):
+    """Change value in table"""
 
     command = f"""UPDATE "{table}"
-                SET {values.keys()[0]} = {values.values()[0]}
+                SET {old_value} = {new_value}
                 ;"""
 
-    with psycopg2.connect(db) as conn:
-        with conn.cursor() as cur:
-            cur.execute(command)
-
-    return 'Updated'
+    return execute_sql(command)
 
 
-def delete(values: dict[str: str], table: str):
-    """Delete value from db"""
-
-    if not is_table(table):
-        return "You don't have any subscriptions yet"
+def delete_row(table: str, channel_id: str):
+    """Delete row from table"""
 
     command = f"""DELETE FROM "{table}"
-                WHERE channel = {values.keys()[0]}
-                AND pattern = {values.values()[0]}
-                ;"""
+                    WHERE channel_id = {channel_id}
+                    ;"""
 
-    try:
-        with psycopg2.connect(db) as conn:
-            with conn.cursor() as cur:
-                cur.execute(command)
-    except psycopg2.DatabaseError as error:
-        return error
-
-    return 'Deleted'
+    return execute_sql(command)
 
 
-def get(table: str):
-    """Return a string with all user's subs"""
+def get_value(table: str, field='*'):
+    """Get data from table"""
 
-    if not is_table(table):
-        return "You don't have any subscriptions yet"
+    command = f"""
+    SELECT {field} FROM "{table}"
+    ;"""
 
-    command = f"""SELECT * FROM "{table}";"""
-
-    with psycopg2.connect(db) as conn:
-        with conn.cursor() as cur:
-            cur.execute(command)
-            list_of_subs = cur.fetchall()
-
-    if not list_of_subs:
-        return 'Your list of subs is empty'
-
-    result = ''
-    for row in list_of_subs:
-        result += f'{row[1]} - {row[2]}\n'
-
-    return result
+    return execute_sql(command)
 
 
-def is_table(name: str):
+def is_table(table: str):
     """Check if table exists"""
 
-    with psycopg2.connect(db) as conn:
-        with conn.cursor() as cur:
-            try:
-                cur.execute(f"SELECT * FROM pg_catalog.pg_tables WHERE schemaname = 'public';")
-                tables = cur.fetchone()
+    command = f"SELECT * FROM pg_catalog.pg_tables WHERE schemaname = 'public';"
+    tables = execute_sql(command)
 
-                if name in tables:
-                    return True
-                return False
-
-            except psycopg2.DatabaseError:
-                return False
+    if table in tables:
+        return True
+    return False

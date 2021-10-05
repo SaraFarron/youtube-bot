@@ -8,7 +8,7 @@ from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardBu
 from os import environ
 import asyncio
 
-from new_db import *
+from db import *
 from main import logger, get_last_videos
 
 

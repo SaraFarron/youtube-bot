@@ -1,5 +1,4 @@
 from logging import basicConfig, getLogger, INFO
-from dotenv import load_dotenv
 import json
 from api_requests import get_last_videos
 
@@ -7,7 +6,6 @@ from api_requests import get_last_videos
 basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             level=INFO)
 logger = getLogger(__name__)
-load_dotenv()
 
 
 def main():
