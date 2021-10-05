@@ -4,23 +4,17 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text, Command
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
 from os import environ
 import asyncio
 
 from db import *
 from main import logger, get_last_videos
+from keyboards import create_inline_keyboard
 
 
 loop = asyncio.get_event_loop()
 bot = Bot(environ.get('BOT_TOKEN'), parse_mode='HTML')
 dp = Dispatcher(bot, loop=loop, storage=MemoryStorage())
-
-
-def create_keyboard(subs):
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    for sub in subs:  # TODO
-        button = InlineKeyboardButton(f'')
 
 
 class NewChannel(StatesGroup):
@@ -79,14 +73,29 @@ async def add_pattern(message: Message, state: FSMContext):
 async def update_subscription(message: Message, state: FSMContext):
 
     subs = get_value(message.from_user.username)
-    await message.answer(subs)
+    subs = {channel: channel_id for channel, channel_id in zip(subs[1], subs[0])}
+    keyboard = create_inline_keyboard(subs, max_rows=1)
+    await message.answer('Choose a subscription you want to change', reply_markup=keyboard)
+    await UpdateChannel.get_channel.set()
+
+
+@dp.message_handler(state=UpdateChannel.get_pattern)
+async def get_pattern(message: Message, state: FSMContext, callback_data):
+    pass
 
 
 @dp.message_handler(Command('ShowAllSubscriptions'))
 async def show_subscriptions(message: Message):
 
     subs = get_value(message.from_user.username)
-    await message.answer(subs)
+    if not subs:
+        await message.answer("You don't have any subscriptions yet")
+    response = ''
+
+    for sub in subs:
+        response += f'{sub[1]} - {sub[3]}\n'
+
+    await message.answer(response)
 
 
 @dp.message_handler(Command('CallMain'))  # TODO For dev purposes, delete after
@@ -110,7 +119,7 @@ async def background_on_start():
 
     while True:
         await asyncio.sleep(86400)  # Every day
-        channels = get_value('')
+        channels = get_value('channels')
         for channel in channels:
             videos = get_last_videos(channel, number=5)
             videos_in_db = get_value(channel)
