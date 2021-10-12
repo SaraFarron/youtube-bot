@@ -2,12 +2,12 @@ from aiogram import Bot, Dispatcher, executor
 from aiogram.types import Message
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text, Command
-from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from os import environ
 import asyncio
 
 from db import *
+from states import NewChannel, UpdateChannel, DeleteChannel
 from main import logger, get_last_videos
 from keyboards import create_inline_keyboard
 
@@ -17,26 +17,14 @@ bot = Bot(environ.get('BOT_TOKEN'), parse_mode='HTML')
 dp = Dispatcher(bot, loop=loop, storage=MemoryStorage())
 
 
-class NewChannel(StatesGroup):
-    get_channel_id = State()
-    get_pattern = State()
-
-
-class UpdateChannel(StatesGroup):
-    get_channel = State()
-    get_pattern = State()
-
-
-class DeleteChannel(StatesGroup):
-    get_channel = State()
-    confirm = State()
-
-
-@dp.message_handler(Text(contains='youtube.com/channel/'))
+@dp.message_handler(Text(contains='youtube.com/c'))
 async def add_channel(message: Message, state: FSMContext):
 
     logger.info(f'user {message.from_user.username} sent link')
-    channel_id = message.text.split('/channel/')[1]
+    try:
+        channel_id = message.text.split('/channel/')[1]
+    except IndexError:  # TODO bug with short links eg http://youtube.com/c/TrashTaste CRITICAL bot becomes unusable
+        channel_id = message.text.split('/c/')[1]
 
     async with state.proxy() as data:
         data['channel_id'] = channel_id
@@ -73,10 +61,15 @@ async def add_pattern(message: Message, state: FSMContext):
 async def update_subscription(message: Message, state: FSMContext):
 
     subs = get_value(message.from_user.username)
-    subs = {channel: channel_id for channel, channel_id in zip(subs[1], subs[0])}
-    keyboard = create_inline_keyboard(subs, max_rows=1)
-    await message.answer('Choose a subscription you want to change', reply_markup=keyboard)
-    await UpdateChannel.get_channel.set()
+    if subs == 'Error':
+        await message.answer("You don't have any subscriptions")
+    else:
+        logger.info(subs)
+        subs = {f'{sub[1]}:\n{sub[3]}': sub[0] for sub in subs}
+        keyboard = create_inline_keyboard(subs, max_rows=1)
+
+        await message.answer('Choose a subscription you want to change', reply_markup=keyboard)
+        await UpdateChannel.get_channel.set()
 
 
 @dp.message_handler(state=UpdateChannel.get_pattern)
@@ -107,7 +100,9 @@ async def main(message: Message):
 
 @dp.message_handler()
 async def echo(message: Message):
-    await message.answer(message.text)
+    buttons = {'name': 1, 'another': 2}
+    logger.info('echoing')
+    await message.answer(message.text, reply_markup=create_inline_keyboard(buttons))
 
 
 async def send_notification(link: str, user: str):

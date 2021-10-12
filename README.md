@@ -1,16 +1,23 @@
 ### Done
 
 Add subscription
+
 Show all subscriptions
+
 Create dp.py
+
 Create api_requests.py
 
 ### Work Plan
 
 Update subscription
+
 Delete subscription
+
 Background tasks
+
 Send menu keyboard
+
 Add help command
 
 ### db format
