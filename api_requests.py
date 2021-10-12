@@ -1,5 +1,6 @@
 from googleapiclient.discovery import build
 from os import environ
+from main import logger
 
 
 api_key = environ.get('GOOGLE_API')
@@ -27,10 +28,17 @@ def pull_videos(response: dict):
     return videos
 
 
-def get_last_videos(channel: str, number=10):
+def get_last_videos(channel: str, number=10, name=False):
     """Returns dict of last number of videos. If number is not provided returns 10"""
 
     youtube = build('youtube', 'v3', developerKey=api_key)
+
+    if name:
+        logger.info('sending request to get id from name')
+        channel = youtube.channels().list(
+            part='id',
+            forUsername=channel
+        ).execute()['items'][0]['id']
 
     request = youtube.search().list(
         part='snippet',
@@ -42,6 +50,9 @@ def get_last_videos(channel: str, number=10):
     videos = pull_videos(response)
 
     while len(videos) < number:
+
+        logger.info('sending request in loop')  # TODO possibility of infinite loop
+
         request = youtube.search().list(
             part='snippet',
             channelId=channel,

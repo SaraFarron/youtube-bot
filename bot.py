@@ -21,16 +21,25 @@ dp = Dispatcher(bot, loop=loop, storage=MemoryStorage())
 async def add_channel(message: Message, state: FSMContext):
 
     logger.info(f'user {message.from_user.username} sent link')
+
     try:
         channel_id = message.text.split('/channel/')[1]
-    except IndexError:  # TODO bug with short links eg http://youtube.com/c/TrashTaste CRITICAL bot becomes unusable
-        channel_id = message.text.split('/c/')[1]
+        async with state.proxy() as data:
+            data['channel_id'] = channel_id
 
-    async with state.proxy() as data:
-        data['channel_id'] = channel_id
+        await message.answer('Send me the pattern now')
+        await NewChannel.get_pattern.set()
 
-    await message.answer('Send me the pattern now')
-    await NewChannel.get_pattern.set()
+    except IndexError:
+        channel_name = message.text.split('/c/')[1]
+        async with state.proxy() as data:
+            data['channel_name'] = channel_name
+
+        await message.answer('Send me the pattern now')
+        await NewChannel.get_pattern.set()
+
+    else:
+        await message.answer('Invalid link')
 
 
 @dp.message_handler(state=NewChannel.get_pattern)
@@ -40,10 +49,16 @@ async def add_pattern(message: Message, state: FSMContext):
     pattern = message.text
 
     async with state.proxy() as data:
-        channel_data = get_last_videos(data['channel_id'])
+        try:
+            channel_data = get_last_videos(data['channel_id'])
+            channel_id, channel_name = channel_data['channel_id'], channel_data['channel_title']
+
+        except KeyError:
+            channel_data = get_last_videos(data['channel_name'], name=True)
+            channel_id, channel_name = channel_data['channel_name'], channel_data['channel_title']
+
         logger.info(channel_data)
 
-    channel_id, channel_name = channel_data['channel_id'], channel_data['channel_title']
     videos = [video for video in channel_data['videos']]
     response = new_user_subscription(channel_id, channel_name, pattern, message.from_user.username)
 
